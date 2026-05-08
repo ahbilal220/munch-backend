@@ -7,7 +7,7 @@ from app.core.security import (
     create_access_token, create_refresh_token,
     decode_token, get_current_user,
 )
-from app.schemas.schemas import Token, TokenRefresh, UserOut, UserRegister
+from app.schemas.schemas import Token, TokenRefresh, UserOut, UserRegister, UserLogin
 from app.services import user_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -25,21 +25,27 @@ async def register(data: UserRegister, db: AsyncSession = Depends(get_db)):
 
 @router.post("/login", response_model=Token)
 async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
+    data: UserLogin,  # <--- Changed from OAuth2PasswordRequestForm
     db: AsyncSession = Depends(get_db),
 ):
-    """FR-21: Authenticate user before granting access."""
-    user = await user_service.authenticate_user(db, form_data.username, form_data.password)
+    """Authenticate user via JSON body and return Bearer tokens."""
+    # Note: We now use data.email and data.password from the JSON body
+    user = await user_service.authenticate_user(db, data.email, data.password)
+    
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
         )
+    
     access_token = create_access_token({"sub": str(user.id)})
     refresh_token = create_refresh_token({"sub": str(user.id)})
-    return Token(access_token=access_token, refresh_token=refresh_token)
-
+    
+    return Token(
+        access_token=access_token, 
+        refresh_token=refresh_token, 
+        token_type="bearer"
+    )
 
 @router.post("/refresh", response_model=Token)
 async def refresh_token(data: TokenRefresh, db: AsyncSession = Depends(get_db)):
