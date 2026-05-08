@@ -51,7 +51,11 @@ app = FastAPI(
 # CORS – allow frontend dev servers
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://munch-kohl.vercel.app/","http://localhost:5173"],
+    # Remove the trailing slash from the Vercel URL
+    allow_origins=[
+        "https://munch-kohl.vercel.app", 
+        "http://localhost:5173"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

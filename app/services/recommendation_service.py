@@ -18,6 +18,7 @@ from collections import Counter
 
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models.models import MenuItem, Order, OrderItem, OrderStatus, ItemAvailability
 
@@ -130,7 +131,9 @@ async def _get_top_selling_scores(db: AsyncSession) -> dict[int, float]:
 
 async def _get_available_items(db: AsyncSession) -> List[MenuItem]:
     result = await db.execute(
-        select(MenuItem).where(
+        select(MenuItem)
+        .options(selectinload(MenuItem.category))  # <--- CRITICAL FIX
+        .where(
             MenuItem.is_active == True,
             MenuItem.availability == ItemAvailability.in_stock,
         )
