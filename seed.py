@@ -49,7 +49,7 @@ async def seed():
         existing_admin = await db.execute(select(User).where(User.email == "admin@university.edu"))
         if not existing_admin.scalar_one_or_none():
             admin = User(
-                email="admin@university.edu",
+                email="admin@pucit.edu.pk",
                 hashed_password=hash_password("Admin@1234"),
                 full_name="Canteen Admin",
                 role=UserRole.admin,
@@ -61,7 +61,7 @@ async def seed():
                 role=UserRole.kitchen_staff,
             )
             student = User(
-                email="student@university.edu",
+                email="student@pucit.edu.pk",
                 hashed_password=hash_password("Student@1234"),
                 full_name="Test Student",
                 role=UserRole.student,
