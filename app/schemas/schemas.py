@@ -5,7 +5,7 @@ Munch – Pydantic Schemas (Request / Response DTOs)
 from __future__ import annotations
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator,computed_field
 
 from app.models.models import ItemAvailability, OrderStatus, UserRole
 
@@ -145,22 +145,14 @@ class CartItemOut(BaseModel):
     menu_item_id: int
     menu_item: MenuItemOut
     quantity: int
-    subtotal: float
     added_at: datetime
 
     model_config = {"from_attributes": True}
 
-    @classmethod
-    def from_orm_with_subtotal(cls, cart_item) -> "CartItemOut":
-        data = {
-            "id": cart_item.id,
-            "menu_item_id": cart_item.menu_item_id,
-            "menu_item": cart_item.menu_item,
-            "quantity": cart_item.quantity,
-            "subtotal": cart_item.menu_item.price * cart_item.quantity,
-            "added_at": cart_item.added_at,
-        }
-        return cls(**data)
+    @computed_field
+    @property
+    def subtotal(self) -> float:
+        return round(self.menu_item.price * self.quantity, 2)
 
 
 class CartOut(BaseModel):
@@ -177,20 +169,13 @@ class OrderItemOut(BaseModel):
     item_name: str
     item_price: float
     quantity: int
-    subtotal: float
 
     model_config = {"from_attributes": True}
 
-    @classmethod
-    def from_orm(cls, oi) -> "OrderItemOut":
-        return cls(
-            id=oi.id,
-            menu_item_id=oi.menu_item_id,
-            item_name=oi.item_name,
-            item_price=oi.item_price,
-            quantity=oi.quantity,
-            subtotal=oi.item_price * oi.quantity,
-        )
+    @computed_field
+    @property
+    def subtotal(self) -> float:
+        return round(self.item_price * self.quantity, 2)
 
 
 class OrderCreate(BaseModel):
@@ -225,8 +210,6 @@ class OrderSummary(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
-
-
 # ── Reviews ───────────────────────────────────────────────────────────────────
 
 class ReviewCreate(BaseModel):

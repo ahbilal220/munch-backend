@@ -23,7 +23,7 @@ async def get_cart(
 ):
     """FR-12: View cart with total price."""
     items = await order_service.get_cart(db, current_user.id)
-    cart_items = [CartItemOut.from_orm_with_subtotal(i) for i in items]
+    cart_items = [CartItemOut.model_validate(i) for i in items]
     total = sum(i.subtotal for i in cart_items)
     return CartOut(items=cart_items, total=round(total, 2), item_count=len(cart_items))
 
@@ -37,7 +37,7 @@ async def add_to_cart(
     """FR-12: Add item to cart."""
     await order_service.add_to_cart(db, current_user.id, data.menu_item_id, data.quantity)
     items = await order_service.get_cart(db, current_user.id)
-    cart_items = [CartItemOut.from_orm_with_subtotal(i) for i in items]
+    cart_items = [CartItemOut.model_validate(i) for i in items]
     total = sum(i.subtotal for i in cart_items)
     return CartOut(items=cart_items, total=round(total, 2), item_count=len(cart_items))
 
@@ -52,7 +52,7 @@ async def update_cart_item(
     """FR-12: Update cart item quantity."""
     await order_service.update_cart_item(db, current_user.id, cart_item_id, data.quantity)
     items = await order_service.get_cart(db, current_user.id)
-    cart_items = [CartItemOut.from_orm_with_subtotal(i) for i in items]
+    cart_items = [CartItemOut.model_validate(i) for i in items]
     total = sum(i.subtotal for i in cart_items)
     return CartOut(items=cart_items, total=round(total, 2), item_count=len(cart_items))
 
