@@ -69,20 +69,28 @@ async def get_menu_item_by_id(db: AsyncSession, item_id: int) -> Optional[MenuIt
     return result.scalar_one_or_none()
 
 
+async def _reload_item(db: AsyncSession, item_id: int) -> MenuItem:
+    """Re-fetch item with all relationships eagerly loaded to avoid MissingGreenlet."""
+    result = await db.execute(
+        select(MenuItem)
+        .options(selectinload(MenuItem.category))
+        .where(MenuItem.id == item_id)
+    )
+    return result.scalar_one()
+
+
 async def create_menu_item(db: AsyncSession, data: MenuItemCreate) -> MenuItem:
     item = MenuItem(**data.model_dump())
     db.add(item)
     await db.flush()
-    await db.refresh(item)
-    return item
+    return await _reload_item(db, item.id)
 
 
 async def update_menu_item(db: AsyncSession, item: MenuItem, data: MenuItemUpdate) -> MenuItem:
     for field, value in data.model_dump(exclude_none=True).items():
         setattr(item, field, value)
     await db.flush()
-    await db.refresh(item)
-    return item
+    return await _reload_item(db, item.id)
 
 
 async def toggle_item_availability(
@@ -91,8 +99,7 @@ async def toggle_item_availability(
     """FR-24: Quick-Toggle for instant item availability (5.2.2)."""
     item.availability = availability
     await db.flush()
-    await db.refresh(item)
-    return item
+    return await _reload_item(db, item.id)
 
 
 async def delete_menu_item(db: AsyncSession, item: MenuItem) -> None:
@@ -123,7 +130,7 @@ async def adjust_stock(
     elif item.availability == ItemAvailability.sold_out and item.stock_quantity > 0:
         item.availability = ItemAvailability.in_stock
     await db.flush()
-    return item
+    return await _reload_item(db, item.id)
 
 
 # ── Reviews ───────────────────────────────────────────────────────────────────
