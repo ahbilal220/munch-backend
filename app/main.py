@@ -53,7 +53,7 @@ app.add_middleware(
     CORSMiddleware,
     # Remove the trailing slash from the Vercel URL
     allow_origins=[
-        "https://munch-kohl.vercel.app", 
+        "https://munch-tau.vercel.app", 
         "http://localhost:5173"
     ],
     allow_credentials=True,
